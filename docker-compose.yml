@@ -1,0 +1,23 @@
+services:
+  hermes-skills-api:
+    image: swayamjoshi87/hermes-skills-api:latest
+    container_name: hermes-skills-api
+    restart: unless-stopped
+    ports:
+      - "3100:3100"
+    volumes:
+      # Installed skills from host
+      - ~/.hermes/skills:/home/node/.hermes/skills:ro
+      # Built-in skills from the hermes-agent repo
+      - /home/server/hermes-agent/skills:/opt/hermes-skills:ro
+    environment:
+      - NODE_ENV=production
+      - PORT=3100
+      # Pass through any env vars hermes might need (API keys live in .env)
+      - HOME=/home/node
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3100/api/health', r => {process.exit(r.statusCode === 200 ? 0 : 1)})"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s

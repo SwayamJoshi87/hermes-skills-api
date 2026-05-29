@@ -211,6 +211,7 @@ function walkDir(dir) {
 function findSkillPath(name) {
   const searchDirs = [
     SKILLS_DIR,
+    '/opt/hermes-skills',
     path.join(process.cwd(), 'skills'),
     '/home/server/hermes-agent/skills',
   ];
