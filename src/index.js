@@ -1,5 +1,6 @@
 const express = require('express');
 const cors = require('cors');
+const path = require('path');
 const rateLimit = require('express-rate-limit');
 const skillsRouter = require('./routes/skills');
 const sourcesRouter = require('./routes/sources');
@@ -7,6 +8,7 @@ const h = require('./services/hermesCli');
 
 const app = express();
 const PORT = process.env.PORT || 3100;
+const ENABLE_DASHBOARD = process.env.ENABLE_DASHBOARD === 'true';
 
 // ─── Middleware ────────────────────────────────────────────────────────────
 
@@ -58,6 +60,17 @@ app.get('/api/config', async (_req, res, next) => {
   } catch (e) { next(e); }
 });
 
+// ─── Dashboard (optional — enable with ENABLE_DASHBOARD=true) ────────────────
+
+if (ENABLE_DASHBOARD) {
+  const dashboardDir = path.join(__dirname, '..', 'dashboard', 'dist');
+  app.use('/dashboard', express.static(dashboardDir));
+  // SPA fallback — any /dashboard/* route that doesn't match a file serves index.html
+  app.get('/dashboard/*', (req, res) => {
+    res.sendFile(path.join(dashboardDir, 'index.html'));
+  });
+}
+
 // ─── Error handler ─────────────────────────────────────────────────────────
 
 app.use((err, _req, res, _next) => {
@@ -92,4 +105,8 @@ app.listen(PORT, () => {
   console.log(`  GET  /api/snapshot            — export snapshot`);
   console.log(`  POST /api/snapshot/import     — import snapshot`);
   console.log(`  GET  /api/config              — skill config`);
+  if (ENABLE_DASHBOARD) {
+    console.log(``);
+    console.log(`  DASHBOARD: http://localhost:${PORT}/dashboard`);
+  }
 });

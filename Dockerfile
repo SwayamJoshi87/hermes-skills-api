@@ -15,7 +15,16 @@ RUN mkdir -p /home/node/.hermes && \
     echo "{}" > /home/node/.hermes/config.yaml && \
     hermes --version
 
-# ─── Node.js App ─────────────────────────────────────────────────────────────
+# ─── Build Dashboard (React + Vite) ──────────────────────────────────────────
+WORKDIR /app/dashboard
+
+COPY dashboard/package.json dashboard/package-lock.json ./
+RUN npm install
+
+COPY dashboard/ ./
+RUN npm run build
+
+# ─── Node.js API Server ──────────────────────────────────────────────────────
 WORKDIR /app
 
 COPY package.json package-lock.json ./
@@ -23,6 +32,7 @@ RUN npm ci --omit=dev
 
 COPY src/ ./src/
 
+# Dashboard dist is at /app/dashboard/dist — keep it
 RUN chown -R node:node /home/node /app
 
 USER node

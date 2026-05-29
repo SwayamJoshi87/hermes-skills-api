@@ -1,4 +1,8 @@
-node_modules/
-.env
-*.log
+node_modules
+.git
+.gitignore
+*.md
+!README.md
 .DS_Store
+dashboard/dist
+dashboard/node_modules
