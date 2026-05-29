@@ -75,6 +75,7 @@ app.listen(PORT, () => {
   console.log(`Endpoints:`);
   console.log(`  GET  /api/health`);
   console.log(`  GET  /api/skills              — list installed skills`);
+  console.log(`  GET  /api/skills/all          — list ALL skills (installed + built-in)`);
   console.log(`  GET  /api/skills/:name        — skill detail (SKILL.md)`);
   console.log(`  GET  /api/skills/:name/files  — list files in skill dir`);
   console.log(`  GET  /api/skills/:name/files/*— read a file`);

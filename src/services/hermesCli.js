@@ -32,6 +32,65 @@ async function listSkills() {
   return JSON.parse(stdout);
 }
 
+/**
+ * Enumerate all built-in skills from the filesystem search paths.
+ * Returns [{name, category, path}] for every SKILL.md found outside ~/.hermes/skills.
+ */
+function enumerateBuiltinSkills() {
+  const builtinDirs = [
+    '/opt/hermes-skills',
+    '/home/server/hermes-agent/skills',
+  ];
+
+  const skills = [];
+  const seen = new Set();
+
+  for (const base of builtinDirs) {
+    if (!fs.existsSync(base)) continue;
+    for (const cat of fs.readdirSync(base, { withFileTypes: true })) {
+      if (!cat.isDirectory()) continue;
+      const catPath = path.join(base, cat.name);
+      for (const entry of fs.readdirSync(catPath, { withFileTypes: true })) {
+        if (!entry.isDirectory()) continue;
+        const skillPath = path.join(catPath, entry.name);
+        const mdPath = path.join(skillPath, 'SKILL.md');
+        if (fs.existsSync(mdPath) && !seen.has(entry.name)) {
+          seen.add(entry.name);
+          skills.push({ name: entry.name, category: cat.name, source: 'builtin', path: skillPath });
+        }
+      }
+    }
+  }
+
+  return skills;
+}
+
+/** List ALL skills — merges installed + built-in, deduplicated by name */
+async function listAllSkills() {
+  const [installed, builtin] = await Promise.all([
+    listSkills().catch(() => ({ skills: [] })),
+    enumerateBuiltinSkills(),
+  ]);
+
+  const installedNames = new Set((installed.skills || []).map(s => s.name));
+  const merged = [...(installed.skills || [])];
+
+  for (const b of builtin) {
+    if (!installedNames.has(b.name)) {
+      merged.push(b);
+    }
+  }
+
+  return {
+    hermes_version: installed.hermes_version,
+    total: merged.length,
+    installed_count: (installed.skills || []).length,
+    builtin_count: builtin.length,
+    skills: merged,
+    taps: installed.taps || [],
+  };
+}
+
 /** Search skill registries */
 async function searchSkills(query, { source = 'all', limit = 10 } = {}) {
   const args = ['skills', 'search', query, '--json', '--limit', String(limit)];
@@ -239,6 +298,7 @@ function parseSkillMd(raw) {
 
 module.exports = {
   listSkills,
+  listAllSkills,
   searchSkills,
   browseSkills,
   getSkill,

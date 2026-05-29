@@ -28,6 +28,17 @@ router.get('/', async (req, res, next) => {
 });
 
 /**
+ * GET /api/skills/all
+ * List ALL skills — merges installed (snapshot) + built-in (filesystem scan).
+ */
+router.get('/all', async (req, res, next) => {
+  try {
+    const data = await h.listAllSkills();
+    res.json(data);
+  } catch (e) { next(e); }
+});
+
+/**
  * POST /api/skills/search
  * Search skill registries.
  * Body: { query, source?, limit? }

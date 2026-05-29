@@ -87,6 +87,7 @@ Requires `hermes` CLI on `$PATH` and `~/.hermes/` on disk.
 | Method | Path | Description |
 |--------|------|-------------|
 | GET | `/api/skills` | List installed skills (JSON via snapshot) |
+| GET | `/api/skills/all` | List ALL skills — installed + built-in (merged, deduplicated) |
 | GET | `/api/skills/:name` | Full skill detail — YAML frontmatter + markdown body |
 | GET | `/api/skills/:name/files` | List all files in a skill directory |
 | GET | `/api/skills/:name/files/*` | Read a specific file (e.g. `references/api.md`) |
