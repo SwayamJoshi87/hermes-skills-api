@@ -8,17 +8,18 @@ services:
     ports:
       - "3100:3100"
     volumes:
-      # ─── YOUR installed skills (read-write — install/uninstall works) ───
-      # This is where `hermes skills install` puts skills from the marketplace.
-      # Mount your host's skills directory so the API reads/writes the SAME
-      # skills your hermes CLI uses.
-      - ~/.hermes/skills:/home/node/.hermes/skills
+      # ─── Full hermes home (read-write except where noted) ───
+      # Mount the ENTIRE ~/.hermes directory so the container's hermes CLI
+      # shares config, API keys, state, and skills with your real hermes.
+      # Everything hermes skills install writes lands here — your actual
+      # hermes agent sees new skills immediately.
+      - ~/.hermes:/home/node/.hermes
 
       # ─── Built-in skills from the hermes-agent repo (read-only) ───
       # These are the 93+ skills shipped with Hermes Agent itself.
       # Point this at wherever you cloned hermes-agent.
-      # If you don't have a local clone, remove this mount — only hub-installed
-      # skills will be visible via file lookup (search still works).
+      # If you don't have a local clone, remove this line — only
+      # hub-installed skills will appear in file lookups. Search still works.
       - /home/server/hermes-agent/skills:/opt/hermes-skills:ro
     environment:
       - NODE_ENV=production
