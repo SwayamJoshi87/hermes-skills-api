@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Anton&family=Bebas+Neue&family=JetBrains+Mono:wght@400;700&family=Inter:wght@400;600&family=Georgia&family=Teko:wght@400;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;700&display=swap');
 
 /* ─── Reset & Base ─────────────────────────────────────────────────────── */
 *, *::before, *::after {
@@ -9,36 +9,36 @@
 
 :root {
   /* Fallback defaults — overridden by theme JS */
-  --bg-primary: #0a0a0a;
-  --bg-secondary: #111;
-  --bg-card: #1a1a1a;
-  --bg-hover: #222;
-  --text-primary: #fff;
-  --text-secondary: #999;
-  --text-muted: #555;
-  --accent: #ff00ff;
-  --accent-glow: #00ffff;
-  --border: #333;
-  --border-hairline: #222;
-  --border-dashed: #333;
-  --font-display: 'Anton', sans-serif;
+  --bg-primary: #0a0a1a;
+  --bg-secondary: #0f0f28;
+  --bg-card: #151535;
+  --bg-hover: #1c1c45;
+  --text-primary: #f0e6ff;
+  --text-secondary: #b8a0e0;
+  --text-muted: #5a4a80;
+  --accent: #e040fb;
+  --accent-glow: #00e5ff;
+  --border: #2a2050;
+  --border-hairline: #1a1540;
+  --border-dashed: #2a2050;
+  --font-display: 'Inter', sans-serif;
   --font-mono: 'JetBrains Mono', monospace;
   --font-body: 'Inter', system-ui, sans-serif;
-  --font-size-display: 80px;
-  --font-size-heading: 24px;
-  --font-size-body: 15px;
+  --font-size-display: 48px;
+  --font-size-heading: 22px;
+  --font-size-body: 14px;
   --font-size-caption: 10px;
-  --radius: 0px;
+  --radius: 6px;
   --shadow: none;
-  --success: #0f0;
-  --danger: #f00;
-  --warning: #ff0;
-  --tag-official-bg: #333;
-  --tag-official-text: #fff;
-  --tag-community-bg: #222;
-  --tag-community-text: #999;
-  --tag-builtin-bg: #222;
-  --tag-builtin-text: #999;
+  --success: #00e676;
+  --danger: #ff1744;
+  --warning: #ffd740;
+  --tag-official-bg: #e040fb22;
+  --tag-official-text: #e040fb;
+  --tag-community-bg: #00e5ff22;
+  --tag-community-text: #00e5ff;
+  --tag-builtin-bg: #00e67622;
+  --tag-builtin-text: #00e676;
 }
 
 html, body, #root {
@@ -248,6 +248,70 @@ html, body, #root {
   margin: 0;
 }
 
+/* ─── Tab Bar ──────────────────────────────────────────────────────────── */
+.tab-bar {
+  display: flex;
+  gap: 0;
+  border-bottom: 1px solid var(--border-hairline);
+}
+
+.tab-btn {
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  padding: 12px 24px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text-muted);
+  cursor: pointer;
+  letter-spacing: 2px;
+  transition: all 0.15s;
+  text-transform: uppercase;
+}
+
+.tab-btn:hover {
+  color: var(--text-primary);
+  border-bottom-color: var(--border);
+}
+
+.tab-btn.active {
+  color: var(--accent);
+  border-bottom-color: var(--accent);
+}
+
+/* ─── Marketplace Search ───────────────────────────────────────────────── */
+.marketplace-search {
+  max-width: 480px;
+  margin-bottom: 0;
+}
+
+/* ─── Empty State ──────────────────────────────────────────────────────── */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 64px 24px;
+  gap: 8px;
+  font-family: var(--font-mono);
+  font-size: 14px;
+  color: var(--text-muted);
+  letter-spacing: 2px;
+  text-align: center;
+}
+
+.empty-icon {
+  font-size: 32px;
+  margin-bottom: 8px;
+}
+
+.empty-hint {
+  font-size: var(--font-size-caption);
+  color: var(--text-muted);
+  letter-spacing: 1px;
+  opacity: 0.6;
+}
+
 /* ─── Content Area ─────────────────────────────────────────────────────── */
 .content-area {
   flex: 1;
@@ -382,6 +446,42 @@ html, body, #root {
   font-family: var(--font-mono);
   font-size: 10px;
   color: var(--text-muted);
+  flex-wrap: wrap;
+}
+
+.skill-category {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text-muted);
+}
+
+.skill-desc {
+  font-size: 11px;
+  color: var(--text-secondary);
+  line-height: 1.4;
+}
+
+.skill-trust {
+  font-family: var(--font-mono);
+  font-size: 8px;
+  padding: 1px 5px;
+  letter-spacing: 1px;
+  white-space: nowrap;
+}
+
+.skill-trust.builtin {
+  color: var(--tag-builtin-text);
+  background: var(--tag-builtin-bg);
+}
+
+.skill-trust.trusted {
+  color: var(--tag-official-text);
+  background: var(--tag-official-bg);
+}
+
+.skill-trust.community {
+  color: var(--tag-community-text);
+  background: var(--tag-community-bg);
 }
 
 .skill-identifier {
@@ -406,6 +506,13 @@ html, body, #root {
   letter-spacing: 1px;
   opacity: 0;
   transition: opacity 0.15s;
+}
+
+.action-installed {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--success);
+  letter-spacing: 1px;
 }
 
 .skill-card:hover .action-hint {

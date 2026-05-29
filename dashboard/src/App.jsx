@@ -13,21 +13,21 @@ export function useTheme() {
 const THEME_KEY = 'hermes-dashboard-theme';
 
 export default function App() {
-  const [themeId, setThemeId] = useState(() => localStorage.getItem(THEME_KEY) || 'dossier');
+  const [themeId, setThemeId] = useState(() => localStorage.getItem(THEME_KEY) || 'neon');
   const [skills, setSkills] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedSkill, setSelectedSkill] = useState(null);
   const [view, setView] = useState('browse'); // browse | detail
+  const [tab, setTab] = useState('installed'); // installed | available
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState(null);
   const [searching, setSearching] = useState(false);
-  const [categoryFilter, setCategoryFilter] = useState('all');
-  const [sourceFilter, setSourceFilter] = useState('all');
   const [apiStatus, setApiStatus] = useState(null);
   const [actionMsg, setActionMsg] = useState(null);
+  const [installing, setInstalling] = useState(null);
 
-  const theme = themes[themeId];
+  const theme = themes[themeId] || themes.neon;
 
   // Apply CSS variables
   useEffect(() => {
@@ -56,16 +56,19 @@ export default function App() {
     })();
   }, []);
 
-  // Search handler
-  const handleSearch = useCallback(async (q) => {
-    setSearchQuery(q);
-    if (!q.trim()) {
-      setSearchResults(null);
-      return;
+  // Search marketplace when tab changes to "available"
+  useEffect(() => {
+    if (tab === 'available' && !searchResults) {
+      handleMarketSearch('');
     }
+  }, [tab]);
+
+  // Search handler
+  const handleMarketSearch = useCallback(async (q) => {
+    setSearchQuery(q);
     setSearching(true);
     try {
-      const data = await searchSkills(q);
+      const data = await searchSkills(q || ' ');
       setSearchResults(data.results || []);
     } catch (e) {
       setActionMsg({ type: 'error', text: `Search failed: ${e.message}` });
@@ -76,6 +79,7 @@ export default function App() {
 
   // Install handler
   const handleInstall = useCallback(async (identifier) => {
+    setInstalling(identifier);
     setActionMsg({ type: 'info', text: 'Installing...' });
     try {
       await installSkill(identifier);
@@ -83,10 +87,18 @@ export default function App() {
       // Refresh list
       const data = await getAllSkills();
       setSkills(data.skills || []);
+      // Mark as installed in search results
+      if (searchResults) {
+        setSearchResults(prev =>
+          prev.map(r => r.identifier === identifier ? { ...r, installed: true } : r)
+        );
+      }
     } catch (e) {
       setActionMsg({ type: 'error', text: `Install failed: ${e.message}` });
+    } finally {
+      setInstalling(null);
     }
-  }, []);
+  }, [searchResults]);
 
   // Uninstall handler
   const handleUninstall = useCallback(async (name) => {
@@ -126,14 +138,8 @@ export default function App() {
     }
   }, [actionMsg]);
 
-  // Filter skills
-  const categories = [...new Set(skills.map(s => s.category))].sort();
-  const filteredSkills = skills.filter(s => {
-    if (categoryFilter !== 'all' && s.category !== categoryFilter) return false;
-    if (sourceFilter !== 'all' && s.source !== sourceFilter) return false;
-    if (searchQuery && !s.name.toLowerCase().includes(searchQuery.toLowerCase())) return false;
-    return true;
-  });
+  const installedSkills = skills.filter(s => s.installed !== false);
+  const enabledCount = installedSkills.length;
 
   if (loading) {
     return (
@@ -170,20 +176,7 @@ export default function App() {
         <header className="masthead">
           <div className="masthead-left">
             <span className="masthead-title">HERMES<span className="accent-dot">.</span></span>
-            <span className="masthead-sub">SKILLS DASHBOARD</span>
-          </div>
-          <div className="masthead-center">
-            <div className={`search-box ${searching ? 'searching' : ''}`}>
-              <input
-                type="text"
-                placeholder="SEARCH SKILLS..."
-                value={searchQuery}
-                onChange={(e) => handleSearch(e.target.value)}
-                onKeyDown={(e) => e.key === 'Escape' && setSearchQuery('') && setSearchResults(null)}
-              />
-              {searching && <span className="search-spinner" />}
-              <span className="search-icon">§</span>
-            </div>
+            <span className="masthead-sub">SKILLS HUB</span>
           </div>
           <div className="masthead-right">
             <span className={`status-indicator ${apiStatus ? 'online' : 'offline'}`} />
@@ -200,7 +193,7 @@ export default function App() {
                   onClick={() => setThemeId(t.id)}
                   title={t.description}
                 >
-                  {t.id === 'dossier' ? 'DOS' : t.id === 'industrial' ? 'IND' : 'CHS'}
+                  {t.label}
                 </button>
               ))}
             </div>
@@ -214,47 +207,69 @@ export default function App() {
           </div>
         )}
 
-        {/* Section rule */}
+        {/* Tab bar */}
+        <div className="tab-bar">
+          <button
+            className={`tab-btn ${tab === 'installed' ? 'active' : ''}`}
+            onClick={() => { setTab('installed'); setSearchQuery(''); setSearchResults(null); }}
+          >
+            INSTALLED ({enabledCount})
+          </button>
+          <button
+            className={`tab-btn ${tab === 'available' ? 'active' : ''}`}
+            onClick={() => setTab('available')}
+          >
+            AVAILABLE
+          </button>
+        </div>
+
         <div className="section-rule" />
 
         {/* Main content */}
         <main className="content-area">
-          {view === 'browse' && (
+          {view === 'browse' && tab === 'installed' && (
+            <SkillList
+              skills={installedSkills}
+              searchResults={null}
+              onView={handleViewSkill}
+              onInstall={handleInstall}
+            />
+          )}
+
+          {view === 'browse' && tab === 'available' && (
             <>
-              {/* Filters bar */}
-              <div className="filters-bar">
-                <div className="filter-group">
-                  <span className="filter-label">CATEGORY</span>
-                  <select value={categoryFilter} onChange={e => setCategoryFilter(e.target.value)}>
-                    <option value="all">ALL ({skills.length})</option>
-                    {categories.map(c => (
-                      <option key={c} value={c}>{c.toUpperCase()} ({skills.filter(s => s.category === c).length})</option>
-                    ))}
-                  </select>
+              <div className="marketplace-search">
+                <div className={`search-box ${searching ? 'searching' : ''}`}>
+                  <input
+                    type="text"
+                    placeholder="SEARCH MARKETPLACE..."
+                    value={searchQuery}
+                    onChange={(e) => handleMarketSearch(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Escape' && handleMarketSearch('')}
+                  />
+                  {searching && <span className="search-spinner" />}
+                  <span className="search-icon">§</span>
                 </div>
-                <div className="filter-group">
-                  <span className="filter-label">SOURCE</span>
-                  <select value={sourceFilter} onChange={e => setSourceFilter(e.target.value)}>
-                    <option value="all">ALL</option>
-                    <option value="official">OFFICIAL</option>
-                    <option value="builtin">BUILT-IN</option>
-                    <option value="community">COMMUNITY</option>
-                  </select>
-                </div>
-                {searchResults && (
-                  <span className="search-count">
-                    MARKETPLACE: {searchResults.length} RESULTS
-                  </span>
-                )}
               </div>
 
-              {/* Skills grid */}
-              <SkillList
-                skills={filteredSkills}
-                searchResults={searchResults}
-                onView={handleViewSkill}
-                onInstall={handleInstall}
-              />
+              <div className="section-rule" style={{ marginBottom: 16 }} />
+
+              {searchResults && searchResults.length === 0 ? (
+                <div className="empty-state">
+                  <span className="empty-icon">⚡</span>
+                  <span>NO SKILLS FOUND</span>
+                  <span className="empty-hint">Try a different search term</span>
+                </div>
+              ) : (
+                <SkillList
+                  skills={searchResults || []}
+                  searchResults={null}
+                  onView={null}
+                  onInstall={handleInstall}
+                  installing={installing}
+                  marketplace
+                />
+              )}
             </>
           )}
 
@@ -268,7 +283,7 @@ export default function App() {
           )}
         </main>
 
-        {/* Footer rule */}
+        {/* Footer */}
         <div className="section-rule" />
         <footer className="footer">
           <span>REV. {new Date().toISOString().slice(0, 10)}</span>
